@@ -1,2 +1,0 @@
-time="2024-11-15T01:39:37+03:00" level=debug msg="Application started\n" func="github.com/shoksin/go-REST-API-purchases/app.Run()" file="app.go:10"
-time="2024-11-15T01:48:17+03:00" level=debug msg="Application started\n" func="github.com/shoksin/go-REST-API-purchases/app.Run()" file="app.go:20"
