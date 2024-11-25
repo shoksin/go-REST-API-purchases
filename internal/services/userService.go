@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/shoksin/go-REST-API-purchases/internal/models"
 	"github.com/shoksin/go-REST-API-purchases/internal/repositories"
 	"github.com/shoksin/go-REST-API-purchases/pkg/utils"
@@ -8,8 +9,8 @@ import (
 )
 
 type UserService interface {
-	Create(user *models.User) map[string]interface{}
-	Login(email, password string) map[string]interface{}
+	Create(user *models.User) (map[string]interface{}, error)
+	Login(email, password string) (map[string]interface{}, error)
 }
 
 type userService struct {
@@ -20,20 +21,25 @@ func NewUserService(userRepository repositories.UserRepository) UserService {
 	return &userService{userRepository: userRepository}
 }
 
-func (s *userService) Create(user *models.User) map[string]interface{} {
-	err := s.userRepository.CreateUser(user)
+func (s *userService) Create(user *models.User) (map[string]interface{}, error) {
+	userResp, err := s.userRepository.CreateUser(user)
 	if err != nil {
-		logging.GetLogger().Fatal("Account wasn't created!")
-		return utils.Message(false, "Register failed")
+		logging.GetLogger().Error(err)
+		return utils.Message("Register failed"), err
 	}
-	return utils.Message(true, "Account created!")
+	logging.GetLogger().Debug(fmt.Println(user))
+	resp := utils.Message("Account created!")
+	resp["user"] = userResp
+	return resp, nil
 }
 
-func (s *userService) Login(email, password string) map[string]interface{} {
-	err := s.userRepository.Login(email, password)
+func (s *userService) Login(email, password string) (map[string]interface{}, error) {
+	userResp, err := s.userRepository.Login(email, password)
 	if err != nil {
-		logging.GetLogger().Fatal("Login failed!")
-		return utils.Message(false, "Login failed!")
+		logging.GetLogger().Error(err)
+		return utils.Message(err.Error()), err
 	}
-	return utils.Message(true, "Login successful!")
+	resp := utils.Message("Login successful!")
+	resp["user"] = userResp
+	return resp, nil
 }

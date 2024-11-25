@@ -7,6 +7,7 @@ import (
 	"github.com/shoksin/go-REST-API-purchases/internal/handlers"
 	"github.com/shoksin/go-REST-API-purchases/internal/repositories"
 	"github.com/shoksin/go-REST-API-purchases/internal/services"
+	"github.com/shoksin/go-REST-API-purchases/middleware"
 	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
 	"os"
 )
@@ -22,13 +23,22 @@ func Run() {
 
 	e := echo.New()
 
-	db := db2.GetDB()
+	e.Use(middleware.JWTAuth)
 
+	db := db2.GetDB()
 	userRepository := repositories.NewUserRepository(db)
+	purchasesRepository := repositories.NewPurchasesRepository(db)
 	userService := services.NewUserService(userRepository)
+	purchasesService := services.NewPurchasesService(purchasesRepository)
 	userHandler := handlers.NewUserHandler(userService)
+	purchasesHandler := handlers.NewPurchasesHandler(purchasesService)
 
 	e.POST("/register", userHandler.CreateUser)
+	e.POST("/login", userHandler.Login)
+	e.POST("/purchases/add", purchasesHandler.CreatePurchase)
+	e.GET("/purchases/get", purchasesHandler.GetPurchases)
+	e.DELETE("/purchases/delete", purchasesHandler.DeletePurchase)
+	e.DELETE("/purchases/delete", purchasesHandler.DeleteUserPurchases)
 
 	if err := e.Start(address); err != nil {
 		logging.GetLogger().Fatal(err)

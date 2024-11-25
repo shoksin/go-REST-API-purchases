@@ -8,21 +8,46 @@ import (
 	"net/http"
 )
 
-type UserHandler struct {
+type UserHandler interface {
+	CreateUser(c echo.Context) error
+	Login(c echo.Context) error
+}
+
+type userHandler struct {
 	userService services.UserService
 }
 
-func NewUserHandler(userService services.UserService) *UserHandler {
-	return &UserHandler{userService}
+func NewUserHandler(userService services.UserService) UserHandler {
+	return &userHandler{userService}
 }
 
-func (h *UserHandler) CreateUser(c echo.Context) error {
+func (h *userHandler) CreateUser(c echo.Context) error {
 	user := &models.User{}
 	if err := c.Bind(user); err != nil {
-		c.Response().WriteHeader(http.StatusBadRequest)
-		return c.JSON(http.StatusBadRequest, utils.Message(false, "bad request"))
+		return utils.Respond(c, http.StatusBadRequest, utils.Message("Bad request"))
 	}
 
-	resp := h.userService.Create(user)
-	return c.JSON(http.StatusCreated, resp)
+	if validResp := user.ValidateRegister(); validResp != nil {
+		return utils.Respond(c, http.StatusBadRequest, validResp)
+	}
+	resp, err := h.userService.Create(user)
+	if err != nil {
+
+	}
+	return utils.Respond(c, http.StatusCreated, resp)
+}
+
+func (h *userHandler) Login(c echo.Context) error {
+	loginUser := &models.LoginUser{}
+	if err := c.Bind(loginUser); err != nil {
+		return utils.Respond(c, http.StatusBadRequest, utils.Message("Bad request"))
+	}
+	if validResp := loginUser.ValidateLogin(); validResp != nil {
+		return utils.Respond(c, http.StatusBadRequest, validResp)
+	}
+	resp, err := h.userService.Login(loginUser.Email, loginUser.Password)
+	if err != nil {
+		return utils.Respond(c, http.StatusForbidden, resp)
+	}
+	return utils.Respond(c, http.StatusOK, resp)
 }

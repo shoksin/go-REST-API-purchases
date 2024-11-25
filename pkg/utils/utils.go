@@ -2,18 +2,20 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/labstack/echo/v4"
 	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
-	"net/http"
 )
 
-func Message(status bool, message string) map[string]interface{} {
-	return map[string]interface{}{"status": status, "message": message}
+func Message(message string) map[string]interface{} {
+	return map[string]interface{}{"message": message}
 }
 
-func Respond(w http.ResponseWriter, data map[string]interface{}) {
-	w.Header().Add("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(data)
-	if err != nil {
-		logging.GetLogger().Error("Utils respond error: ", err)
+func Respond(c echo.Context, statusCode int, message map[string]interface{}) error {
+	c.Response().Header().Set("Content-Type", "application/json")
+	c.Response().Status = statusCode
+	if err := json.NewEncoder(c.Response()).Encode(message); err != nil {
+		logging.GetLogger().Fatal("API respond isn't encoded")
+		return err
 	}
+	return nil
 }
