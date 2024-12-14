@@ -6,6 +6,8 @@ import (
 	"github.com/shoksin/go-REST-API-purchases/internal/services"
 	"github.com/shoksin/go-REST-API-purchases/middleware"
 	"github.com/shoksin/go-REST-API-purchases/pkg/utils"
+	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
@@ -19,10 +21,11 @@ type PurchasesHandler interface {
 
 type purchasesHandler struct {
 	purchasesService services.PurchasesService
+	logger           logging.Logger
 }
 
-func NewPurchasesHandler(purchasesService services.PurchasesService) PurchasesHandler {
-	return &purchasesHandler{purchasesService: purchasesService}
+func NewPurchasesHandler(purchasesService services.PurchasesService, logger logging.Logger) PurchasesHandler {
+	return &purchasesHandler{purchasesService: purchasesService, logger: logger.GetLoggerWithField("layer", "PurchasesHandlers")}
 }
 
 func (p *purchasesHandler) CreatePurchase(c echo.Context) error {
@@ -35,6 +38,12 @@ func (p *purchasesHandler) CreatePurchase(c echo.Context) error {
 
 	purchase.UserID = tk.UserId
 	if validResp := purchase.Validate(); validResp != nil {
+		p.logger.WithFields(logrus.Fields{
+			"userID":   tk.UserId,
+			"name":     purchase.Name,
+			"price":    purchase.Price,
+			"quantity": purchase.Quantity,
+		}).Warn("invalid purchase data")
 		return utils.Respond(c, http.StatusBadRequest, validResp)
 	}
 	resp, err := p.purchasesService.CreatePurchase(purchase)
@@ -57,6 +66,9 @@ func (p *purchasesHandler) DeletePurchase(c echo.Context) error {
 	purchaseId := c.QueryParam("id")
 	id, ok := strconv.Atoi(purchaseId)
 	if ok != nil || id < 0 {
+		p.logger.WithFields(logrus.Fields{
+			"purchase_id": purchaseId,
+		}).Warn("invalid purchase_id")
 		return utils.Respond(c, http.StatusBadRequest, utils.Message("purchase id must be positive integer"))
 	}
 	resp, err := p.purchasesService.DeletePurchase(uint(id))

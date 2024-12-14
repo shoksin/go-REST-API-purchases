@@ -4,6 +4,7 @@ import (
 	"github.com/shoksin/go-REST-API-purchases/internal/models"
 	"github.com/shoksin/go-REST-API-purchases/internal/repositories"
 	"github.com/shoksin/go-REST-API-purchases/pkg/utils"
+	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
 )
 
 type PurchasesService interface {
@@ -15,10 +16,11 @@ type PurchasesService interface {
 
 type purchasesService struct {
 	purchaseRepository repositories.PurchasesRepository
+	logger             logging.Logger
 }
 
-func NewPurchasesService(purchaseRepository repositories.PurchasesRepository) PurchasesService {
-	return &purchasesService{purchaseRepository: purchaseRepository}
+func NewPurchasesService(purchaseRepository repositories.PurchasesRepository, logger logging.Logger) PurchasesService {
+	return &purchasesService{purchaseRepository: purchaseRepository, logger: logger.GetLoggerWithField("layer", "PurchasesService")}
 }
 
 func (p *purchasesService) CreatePurchase(purchase *models.Purchase) (map[string]interface{}, error) {
@@ -26,7 +28,7 @@ func (p *purchasesService) CreatePurchase(purchase *models.Purchase) (map[string
 	if err != nil {
 		return utils.Message("creation failed"), err
 	}
-	resp := utils.Message("successfully created")
+	resp := utils.Message("purchase created")
 	resp["purchase"] = purchaseResp
 	return resp, nil
 }
@@ -37,6 +39,9 @@ func (p *purchasesService) GetPurchases(userId uint) (map[string]interface{}, er
 		return utils.Message("purchase not found"), err
 	}
 	resp := utils.Message("purchase found")
+	if len(purchasesResp) == 0 {
+		resp = utils.Message("There is no purchases")
+	}
 	resp["purchases"] = purchasesResp
 	return resp, nil
 }

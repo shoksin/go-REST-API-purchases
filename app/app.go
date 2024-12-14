@@ -25,20 +25,21 @@ func Run() {
 
 	e.Use(middleware.JWTAuth)
 
+	logger := logging.GetLogger()
 	db := db2.GetDB()
-	userRepository := repositories.NewUserRepository(db)
-	purchasesRepository := repositories.NewPurchasesRepository(db)
-	userService := services.NewUserService(userRepository)
-	purchasesService := services.NewPurchasesService(purchasesRepository)
-	userHandler := handlers.NewUserHandler(userService)
-	purchasesHandler := handlers.NewPurchasesHandler(purchasesService)
+	userRepository := repositories.NewUserRepository(db, logger)
+	purchasesRepository := repositories.NewPurchasesRepository(db, logger)
+	userService := services.NewUserService(userRepository, logger)
+	purchasesService := services.NewPurchasesService(purchasesRepository, logger)
+	userHandler := handlers.NewUserHandler(userService, logger)
+	purchasesHandler := handlers.NewPurchasesHandler(purchasesService, logger)
 
 	e.POST("/register", userHandler.CreateUser)
 	e.POST("/login", userHandler.Login)
-	e.POST("/purchases/add", purchasesHandler.CreatePurchase)
-	e.GET("/purchases/get", purchasesHandler.GetPurchases)
-	e.DELETE("/purchases/delete", purchasesHandler.DeletePurchase)
-	e.DELETE("/purchases/delete", purchasesHandler.DeleteUserPurchases)
+	e.POST("/purchases/", purchasesHandler.CreatePurchase)
+	e.GET("/purchases/", purchasesHandler.GetPurchases)
+	e.DELETE("/purchases/", purchasesHandler.DeletePurchase)
+	e.DELETE("/purchases/", purchasesHandler.DeleteUserPurchases)
 
 	if err := e.Start(address); err != nil {
 		logging.GetLogger().Fatal(err)

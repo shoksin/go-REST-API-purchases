@@ -1,11 +1,11 @@
 package services
 
 import (
-	"fmt"
 	"github.com/shoksin/go-REST-API-purchases/internal/models"
 	"github.com/shoksin/go-REST-API-purchases/internal/repositories"
 	"github.com/shoksin/go-REST-API-purchases/pkg/utils"
 	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
+	"github.com/sirupsen/logrus"
 )
 
 type UserService interface {
@@ -15,19 +15,31 @@ type UserService interface {
 
 type userService struct {
 	userRepository repositories.UserRepository
+	logger         logging.Logger
 }
 
-func NewUserService(userRepository repositories.UserRepository) UserService {
-	return &userService{userRepository: userRepository}
+func NewUserService(userRepository repositories.UserRepository, logger logging.Logger) UserService {
+	return &userService{userRepository: userRepository, logger: logger.GetLoggerWithField("layer", "UserService")}
 }
 
 func (s *userService) Create(user *models.User) (map[string]interface{}, error) {
+	isTaken, err := s.userRepository.IsEmailTaken(user.Email)
+	if err != nil {
+		return utils.Message("Error checking email existence"), err
+	}
+
+	if isTaken {
+		s.logger.WithField("email", user.Email).Info("Email already registered")
+		return utils.Message("Email already taken"), nil
+	}
 	userResp, err := s.userRepository.CreateUser(user)
 	if err != nil {
-		logging.GetLogger().Error(err)
+		s.logger.WithFields(logrus.Fields{
+			"email": user.Email,
+			"name":  user.Name,
+		}).Error("Error while creating user")
 		return utils.Message("Register failed"), err
 	}
-	logging.GetLogger().Debug(fmt.Println(user))
 	resp := utils.Message("Account created!")
 	resp["user"] = userResp
 	return resp, nil
@@ -36,7 +48,7 @@ func (s *userService) Create(user *models.User) (map[string]interface{}, error) 
 func (s *userService) Login(email, password string) (map[string]interface{}, error) {
 	userResp, err := s.userRepository.Login(email, password)
 	if err != nil {
-		logging.GetLogger().Error(err)
+		s.logger.Error("Failed to login")
 		return utils.Message(err.Error()), err
 	}
 	resp := utils.Message("Login successful!")

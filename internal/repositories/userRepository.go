@@ -14,14 +14,27 @@ import (
 type UserRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	Login(email string, password string) (*models.LoginUser, error)
+	IsEmailTaken(email string) (bool, error)
 }
 
 type userRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger logging.Logger
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{db}
+func NewUserRepository(db *gorm.DB, logger logging.Logger) UserRepository {
+	return &userRepository{db, logger.GetLoggerWithField("layer", "UserRepository")}
+}
+
+func (repo *userRepository) IsEmailTaken(email string) (bool, error) {
+	var count int64 = 0
+	err := db.GetDB().Model(&models.User{}).Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		repo.logger.WithField(
+			"email", email).Error("Error checking email existence")
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (repo *userRepository) CreateUser(user *models.User) (*models.User, error) {
@@ -34,6 +47,7 @@ func (repo *userRepository) CreateUser(user *models.User) (*models.User, error) 
 		return nil, err
 	}
 	user.Password = ""
+	repo.logger.WithField("email", user.Email).Info("User created")
 	return user, nil
 }
 
@@ -46,7 +60,7 @@ func (repo *userRepository) Login(email string, password string) (*models.LoginU
 		return nil, err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password)); err != nil {
-		logging.GetLogger().Debug("Not correct password")
+		repo.logger.Info("Not correct password")
 		return nil, errors.New("wrong password")
 	}
 

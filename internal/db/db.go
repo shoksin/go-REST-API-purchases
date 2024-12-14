@@ -10,7 +10,10 @@ import (
 	"os"
 )
 
-var db *gorm.DB
+var (
+	db     *gorm.DB
+	logger = logging.GetLogger()
+)
 
 func init() {
 	config.Load()
@@ -20,18 +23,16 @@ func init() {
 	dbName := os.Getenv("DB_NAME")
 	dbHost := os.Getenv("DB_HOST")
 
-	fmt.Printf("host=%s user=%s dbname=%s sslmode=disable password=%s\n\n", dbHost, username, dbName, password)
-
 	dsn := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, username, dbName, password)
 
 	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logging.GetLogger().Fatal("couldn't connect to database")
+		logger.Fatal("couldn't connect to database")
 	}
 
 	db = conn
 	if err := db.Debug().AutoMigrate(&models.User{}, &models.Purchase{}); err != nil {
-		logging.GetLogger().Fatal("unsuccessful database migration", err)
+		logger.Fatal("unsuccessful database migration", err)
 	}
 }
 
