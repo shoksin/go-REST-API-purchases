@@ -65,6 +65,7 @@ var JWTAuth = func(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		ctx := context.WithValue(c.Request().Context(), "user_id", tk.UserId)
+		ctx = context.WithValue(c.Request().Context(), "role", tk.Role)
 		c.SetRequest(c.Request().WithContext(ctx))
 		return next(c)
 	}

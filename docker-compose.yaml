@@ -3,13 +3,13 @@ version: '3.9'
 services:
   db:
     image: postgres:latest
-    container_name: postgres-db
+    container_name: purchases-db
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - purchases_db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     restart: always
@@ -32,4 +32,4 @@ services:
       - db
 
 volumes:
-  postgres_data:
+  purchases_db:

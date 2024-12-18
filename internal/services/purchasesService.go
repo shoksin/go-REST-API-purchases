@@ -12,6 +12,7 @@ type PurchasesService interface {
 	GetPurchases(userId uint) (map[string]interface{}, error)
 	DeletePurchase(id uint) (map[string]interface{}, error)
 	DeleteUserPurchases(userId uint) (map[string]interface{}, error)
+	UpdateUserPurchase(purchaseId uint, purchase *models.Purchase) (map[string]interface{}, error)
 }
 
 type purchasesService struct {
@@ -61,5 +62,15 @@ func (p *purchasesService) DeleteUserPurchases(userId uint) (map[string]interfac
 		return utils.Message("purchase not found"), err
 	}
 	resp := utils.Message("purchases deleted")
+	return resp, nil
+}
+
+func (p *purchasesService) UpdateUserPurchase(purchaseId uint, purchase *models.Purchase) (map[string]interface{}, error) {
+	purchaseResp, err := p.purchaseRepository.UpdatePurchase(purchaseId, purchase)
+	if err != nil {
+		return utils.Message("failed to update"), err
+	}
+	resp := utils.Message("purchase updated")
+	resp["purchase"] = purchaseResp
 	return resp, nil
 }

@@ -66,7 +66,7 @@ func (repo *userRepository) Login(email string, password string) (*models.LoginU
 
 	account.Password = ""
 
-	tk := &models.Token{UserId: account.ID}
+	tk := &models.Token{UserId: account.ID, Role: account.Role}
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
 	tokenString, _ := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	account.Token = tokenString

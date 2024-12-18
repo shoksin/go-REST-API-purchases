@@ -8,6 +8,7 @@ import (
 	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 type UserHandler interface {
@@ -26,12 +27,35 @@ func NewUserHandler(userService services.UserService, logger logging.Logger) Use
 
 func (h *userHandler) CreateUser(c echo.Context) error {
 	user := &models.User{}
-	if err := c.Bind(user); err != nil {
+	mockUser := &models.MockUser{}
+	if err := c.Bind(mockUser); err != nil {
 		h.logger.WithFields(logrus.Fields{
 			"request body": c.Request().Body,
 		}).Error("Unable to bind request body")
 		return utils.Respond(c, http.StatusBadRequest, utils.Message("Bad request"))
 	}
+
+	user.Name = mockUser.Name
+	user.Surname = mockUser.Surname
+	user.Email = mockUser.Email
+	user.Password = mockUser.Password
+	user.Role = mockUser.Role
+
+	t, err := time.Parse("2006-01-02", mockUser.DateOfBirth)
+	if err != nil {
+		h.logger.WithFields(logrus.Fields{
+			"date_of_birth": mockUser.DateOfBirth,
+		})
+	}
+
+	user.DateOfBirth = t
+
+	//if err := c.Bind(user); err != nil {
+	//	h.logger.WithFields(logrus.Fields{
+	//		"request body": c.Request().Body,
+	//	}).Error("Unable to bind request body")
+	//	return utils.Respond(c, http.StatusBadRequest, utils.Message("Bad request"))
+	//}
 
 	if validResp := user.ValidateRegister(); validResp != nil {
 		h.logger.WithFields(logrus.Fields{

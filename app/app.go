@@ -41,6 +41,10 @@ func Run() {
 	e.DELETE("/purchases/", purchasesHandler.DeletePurchase)
 	e.DELETE("/purchases/", purchasesHandler.DeleteUserPurchases)
 
+	adminEndpoints := e.Group("/admin")
+	adminEndpoints.Use(middleware.AdminCheck)
+	adminEndpoints.PUT("/purchases/", purchasesHandler.UpdateUserPurchase)
+
 	if err := e.Start(address); err != nil {
 		logging.GetLogger().Fatal(err)
 	}

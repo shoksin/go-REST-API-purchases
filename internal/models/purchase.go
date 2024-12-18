@@ -12,6 +12,7 @@ type Purchase struct {
 	Price     float64 `json:"price"`
 	Quantity  uint64  `json:"quantity"`
 	FullPrice float64 `json:"full_price"`
+	Comment   string  `json:"comment"`
 }
 
 func (p *Purchase) CalculateFullPrice() {
@@ -29,4 +30,20 @@ func (p *Purchase) Validate() map[string]interface{} {
 		return utils.Message("Name shouldn't be empty")
 	}
 	return nil
+}
+
+func (p *Purchase) Assign(p2 *Purchase) {
+	if p2.Name != "" {
+		p.Name = p2.Name
+	}
+	if p2.Price > 0 {
+		p.Price = p2.Price
+	}
+	if p2.Quantity > 0 {
+		p.Quantity = p2.Quantity
+	}
+	if p2.Comment != "" {
+		p.Comment = p2.Comment
+	}
+	p.CalculateFullPrice()
 }

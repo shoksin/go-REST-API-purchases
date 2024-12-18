@@ -14,6 +14,7 @@ type PurchasesRepository interface {
 	GetPurchases(userId uint) ([]*models.Purchase, error)
 	DeletePurchase(id uint) error
 	DeletePurchases(userId uint) error
+	UpdatePurchase(purchaseId uint, purchase *models.Purchase) (*models.Purchase, error)
 }
 
 type purchasesRepository struct {
@@ -76,4 +77,29 @@ func (p *purchasesRepository) DeletePurchases(userId uint) error {
 		"rows_affected": result.RowsAffected,
 	}).Info("Deleted purchases for user")
 	return nil
+}
+
+func (p *purchasesRepository) UpdatePurchase(purchaseId uint, purchase *models.Purchase) (*models.Purchase, error) {
+	purchase.FullPrice = float64(purchase.FullPrice)
+	tempPurchase := &models.Purchase{}
+	err := db.GetDB().Table("purchases").Where("id = ?", purchaseId).First(tempPurchase).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			p.logger.Info("purchase not found")
+			return nil, errors.New("purchase not found")
+		}
+		p.logger.Error("Error while fetching purchase data from DB")
+		return nil, err
+	}
+
+	tempPurchase.Assign(purchase)
+
+	if err := db.GetDB().Save(&tempPurchase).Error; err != nil {
+		p.logger.WithFields(
+			logrus.Fields{
+				"purchase name": purchase.Name,
+				"user_id":       purchase.UserID,
+			}).Error("Failed to update purchase")
+	}
+	return purchase, nil
 }

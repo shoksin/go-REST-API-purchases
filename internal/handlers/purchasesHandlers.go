@@ -17,6 +17,7 @@ type PurchasesHandler interface {
 	GetPurchases(c echo.Context) error
 	DeletePurchase(c echo.Context) error
 	DeleteUserPurchases(c echo.Context) error
+	UpdateUserPurchase(c echo.Context) error
 }
 
 type purchasesHandler struct {
@@ -83,6 +84,33 @@ func (p *purchasesHandler) DeleteUserPurchases(c echo.Context) error {
 	resp, err := p.purchasesService.DeleteUserPurchases(tk.UserId)
 	if err != nil {
 		return utils.Respond(c, http.StatusNotFound, resp)
+	}
+	return utils.Respond(c, http.StatusOK, resp)
+}
+
+func (p *purchasesHandler) UpdateUserPurchase(c echo.Context) error {
+	purchaseId := c.QueryParam("id")
+	id, ok := strconv.Atoi(purchaseId)
+	if ok != nil || id < 0 {
+		p.logger.WithFields(logrus.Fields{
+			"purchase_id": purchaseId,
+		}).Warn("invalid purchase_id")
+		return utils.Respond(c, http.StatusBadRequest, utils.Message("purchase id must be positive integer"))
+	}
+	tk, _ := middleware.GetToken(c)
+	purchase := &models.Purchase{}
+	if err := c.Bind(&purchase); err != nil {
+		return utils.Respond(c, http.StatusBadRequest, utils.Message("not right request body"))
+	}
+
+	purchase.UserID = tk.UserId
+
+	if err := purchase.Validate(); err != nil {
+		p.logger.Warn("invalid purchase data")
+	}
+	resp, err := p.purchasesService.UpdateUserPurchase(uint(id), purchase)
+	if err != nil {
+		return utils.Respond(c, http.StatusInternalServerError, resp)
 	}
 	return utils.Respond(c, http.StatusOK, resp)
 }
