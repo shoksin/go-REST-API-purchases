@@ -25,6 +25,14 @@ func NewUserHandler(userService services.UserService, logger logging.Logger) Use
 	return &userHandler{userService, logger.GetLoggerWithField("layer", "AuthHandlers")}
 }
 
+// CreateUser godoc
+// @Summary CreateUser
+// @Tags auth
+// @Summary create account
+// @ID signup
+// @Accept json
+// @Produce json
+// @Param input body models.User true "account info"
 func (h *userHandler) CreateUser(c echo.Context) error {
 	user := &models.User{}
 	mockUser := &models.MockUser{}

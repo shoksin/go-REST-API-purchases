@@ -3,12 +3,14 @@ package app
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/shoksin/go-REST-API-purchases/config"
+	_ "github.com/shoksin/go-REST-API-purchases/docs"
 	db2 "github.com/shoksin/go-REST-API-purchases/internal/db"
 	"github.com/shoksin/go-REST-API-purchases/internal/handlers"
 	"github.com/shoksin/go-REST-API-purchases/internal/repositories"
 	"github.com/shoksin/go-REST-API-purchases/internal/services"
 	"github.com/shoksin/go-REST-API-purchases/middleware"
 	"github.com/shoksin/go-contacts-REST-API-/pkg/logging"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"os"
 )
 
@@ -22,6 +24,7 @@ func Run() {
 	address := os.Getenv(HOST) + ":" + os.Getenv(PORT)
 
 	e := echo.New()
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	e.Use(middleware.JWTAuth)
 

@@ -46,15 +46,21 @@ func GetToken(c echo.Context) (*models.Token, error) {
 
 var JWTAuth = func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		nonAuth := []string{"/register", "/login"}
-		requestPath := c.Request().URL.Path
+		nonAuth := []string{"/register", "/login", "/swagger"}
+		//requestPath := c.Request().URL.Path
 
-		for _, value := range nonAuth {
-			if value == requestPath {
-				if err := next(c); err != nil {
-					c.Error(err)
-				}
-				return nil
+		//for _, value := range nonAuth {
+		//	if value == requestPath {
+		//		if err := next(c); err != nil {
+		//			c.Error(err)
+		//		}
+		//		return nil
+		//	}
+		//}
+
+		for _, prefix := range nonAuth {
+			if strings.HasPrefix(c.Request().URL.Path, prefix) {
+				return next(c)
 			}
 		}
 
