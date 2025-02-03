@@ -26,8 +26,6 @@ func Run() {
 	e := echo.New()
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	e.Use(middleware.JWTAuth)
-
 	logger := logging.GetLogger()
 	db := db2.GetDB()
 	userRepository := repositories.NewUserRepository(db, logger)
@@ -39,9 +37,12 @@ func Run() {
 
 	e.POST("/register", userHandler.CreateUser)
 	e.POST("/login", userHandler.Login)
+
+	e.Use(middleware.JWTAuth)
+
 	e.POST("/purchases/", purchasesHandler.CreatePurchase)
 	e.GET("/purchases/", purchasesHandler.GetPurchases)
-	e.DELETE("/purchases/", purchasesHandler.DeletePurchase)
+	e.DELETE("/purchases/:id", purchasesHandler.DeletePurchase)
 	e.DELETE("/purchases/", purchasesHandler.DeleteUserPurchases)
 
 	adminEndpoints := e.Group("/admin")

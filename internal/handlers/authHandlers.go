@@ -25,14 +25,16 @@ func NewUserHandler(userService services.UserService, logger logging.Logger) Use
 	return &userHandler{userService, logger.GetLoggerWithField("layer", "AuthHandlers")}
 }
 
-// CreateUser godoc
-// @Summary CreateUser
+// CreateUser @Summary Создание пользователя
 // @Tags auth
-// @Summary create account
+// @Description Создание нового аккаунта
 // @ID signup
-// @Accept json
-// @Produce json
-// @Param input body models.User true "account info"
+// @Accept  json
+// @Produce  json
+// @Param input body swagger.RegisterUser true "Данные для регистрации"
+// @Success 201 {object} swagger.UserResponse
+// @Router /register [post]
+// @Security none
 func (h *userHandler) CreateUser(c echo.Context) error {
 	user := &models.User{}
 	mockUser := &models.MockUser{}
@@ -79,6 +81,16 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 	return utils.Respond(c, http.StatusCreated, resp)
 }
 
+// Login @Summary Авторизация
+// @Tags auth
+// @Description Вход в аккаунт
+// @ID login
+// @Accept  json
+// @Produce  json
+// @Param input body swagger.LoginUser true "Данные для входа"
+// @Success 201 {object} swagger.LoginResponse
+// @Router /login [post]
+// @Security none
 func (h *userHandler) Login(c echo.Context) error {
 	loginUser := &models.LoginUser{}
 	if err := c.Bind(loginUser); err != nil {

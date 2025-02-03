@@ -29,6 +29,16 @@ func NewPurchasesHandler(purchasesService services.PurchasesService, logger logg
 	return &purchasesHandler{purchasesService: purchasesService, logger: logger.GetLoggerWithField("layer", "PurchasesHandlers")}
 }
 
+// CreatePurchase @Summary Создание покупки
+// @Tags purchases
+// @Description Создание новой покупки
+// @ID create
+// @Accept  json
+// @Produce  json
+// @Param input body swagger.CreatePurchase true "Данные о покупке"
+// @Success 201 {object} swagger.CreatePurchaseResponse
+// @Security ApiKeyAuth
+// @Router /purchases/ [post]
 func (p *purchasesHandler) CreatePurchase(c echo.Context) error {
 	purchase := &models.Purchase{}
 	if err := c.Bind(&purchase); err != nil {
@@ -54,6 +64,15 @@ func (p *purchasesHandler) CreatePurchase(c echo.Context) error {
 	return utils.Respond(c, http.StatusCreated, resp)
 }
 
+// GetPurchases @Summary Получить покупки пользователя
+// @Tags purchases
+// @Description Получение покупок пользователя по id
+// @ID get
+// @Accept  json
+// @Produce  json
+// @Success 201 {object} swagger.GetPurchasesResponse
+// @Security ApiKeyAuth
+// @Router /purchases/ [Get]
 func (p *purchasesHandler) GetPurchases(c echo.Context) error {
 	tk, _ := middleware.GetToken(c)
 	purchases, err := p.purchasesService.GetPurchases(tk.UserId)
@@ -63,8 +82,19 @@ func (p *purchasesHandler) GetPurchases(c echo.Context) error {
 	return utils.Respond(c, http.StatusOK, purchases)
 }
 
+// DeletePurchase @Summary Удаление покупки
+// @Tags purchases
+// @Description Удаление конкретной покупки по ID
+// @ID delete-purchase
+// @Produce json
+// @Param id path int true "ID покупки"
+// @Success 200 {object} swagger.DeletePurchaseResponse
+// @Failure 403 {object} swagger.DeletePurchaseResponse
+// @Failure 404 {object} swagger.DeletePurchaseResponse
+// @Security ApiKeyAuth
+// @Router /purchases/{id} [delete]
 func (p *purchasesHandler) DeletePurchase(c echo.Context) error {
-	purchaseId := c.QueryParam("id")
+	purchaseId := c.Param("id")
 	id, ok := strconv.Atoi(purchaseId)
 	if ok != nil || id < 0 {
 		p.logger.WithFields(logrus.Fields{
@@ -79,6 +109,16 @@ func (p *purchasesHandler) DeletePurchase(c echo.Context) error {
 	return utils.Respond(c, http.StatusOK, resp)
 }
 
+// DeleteUserPurchases @Summary Удаление всех покупок пользователя
+// @Tags purchases
+// @Description Удаление всех покупок пользователя
+// @ID delete-purchases
+// @Produce json
+// @Success 200 {object} swagger.DeletePurchaseResponse
+// @Failure 403 {object} swagger.DeletePurchaseResponse
+// @Failure 404 {object} swagger.DeletePurchaseResponse
+// @Security ApiKeyAuth
+// @Router /purchases/ [delete]
 func (p *purchasesHandler) DeleteUserPurchases(c echo.Context) error {
 	tk, _ := middleware.GetToken(c)
 	resp, err := p.purchasesService.DeleteUserPurchases(tk.UserId)

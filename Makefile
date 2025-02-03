@@ -12,3 +12,7 @@ find-volumes:
 open-db:
 	docker exec -it purchases-db psql -U $(DB_USER) -d $(DB_NAME)
 # make open-db DB_USER=username DB_NAME=dbname
+
+swag-init:
+	swag init -g ./cmd/api/main.go --output ./docs
+# doc http://localhost:8080/swagger/index.html

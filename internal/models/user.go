@@ -26,7 +26,7 @@ type User struct {
 }
 
 type MockUser struct {
-	gorm.Model
+	gorm.Model  `swaggerignore:"true"`
 	Name        string `json:"name"`
 	Surname     string `json:"surname"`
 	DateOfBirth string `json:"date_of_birth" time_format:"2006-01-02"`
